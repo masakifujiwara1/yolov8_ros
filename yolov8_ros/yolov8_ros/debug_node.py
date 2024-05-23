@@ -30,7 +30,7 @@ import message_filters
 from cv_bridge import CvBridge
 from ultralytics.utils.plotting import Annotator, colors
 
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import Image, CompressedImage
 from visualization_msgs.msg import Marker
 from visualization_msgs.msg import MarkerArray
 from yolov8_msgs.msg import BoundingBox2D
@@ -71,7 +71,7 @@ class DebugNode(Node):
 
         # subs
         self.image_sub = message_filters.Subscriber(
-            self, Image, "image_raw", qos_profile=self.image_qos_profile)
+            self, CompressedImage, "image_raw", qos_profile=self.image_qos_profile)
         self.detections_sub = message_filters.Subscriber(
             self, DetectionArray, "detections", qos_profile=10)
 
@@ -213,9 +213,9 @@ class DebugNode(Node):
 
         return marker
 
-    def detections_cb(self, img_msg: Image, detection_msg: DetectionArray) -> None:
+    def detections_cb(self, img_msg: CompressedImage, detection_msg: DetectionArray) -> None:
 
-        cv_image = self.cv_bridge.imgmsg_to_cv2(img_msg)
+        cv_image = self.cv_bridge.compressed_imgmsg_to_cv2(img_msg)
         bb_marker_array = MarkerArray()
         kp_marker_array = MarkerArray()
 
@@ -250,6 +250,8 @@ class DebugNode(Node):
                     marker.header.stamp = img_msg.header.stamp
                     marker.id = len(kp_marker_array.markers)
                     kp_marker_array.markers.append(marker)
+
+        img_msg = self.cv_bridge.cv2_to_imgmsg(cv_image, encoding="bgr8")
 
         # publish dbg image
         self._dbg_pub.publish(self.cv_bridge.cv2_to_imgmsg(cv_image,

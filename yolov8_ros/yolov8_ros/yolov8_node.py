@@ -31,7 +31,7 @@ from ultralytics.engine.results import Masks
 from ultralytics.engine.results import Keypoints
 from torch import cuda
 
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import Image, CompressedImage
 from yolov8_msgs.msg import Point2D
 from yolov8_msgs.msg import BoundingBox2D
 from yolov8_msgs.msg import Mask
@@ -92,7 +92,7 @@ class Yolov8Node(Node):
 
         # subs
         self._sub = self.create_subscription(
-            Image,
+            CompressedImage,
             "image_raw",
             self.image_cb,
             self.image_qos_profile
@@ -191,12 +191,10 @@ class Yolov8Node(Node):
 
         return keypoints_list
 
-    def image_cb(self, msg: Image) -> None:
-
+    def image_cb(self, msg: CompressedImage) -> None:
         if self.enable:
-
             # convert image + predict
-            cv_image = self.cv_bridge.imgmsg_to_cv2(msg)
+            cv_image = self.cv_bridge.compressed_imgmsg_to_cv2(msg)
             results = self.yolo.predict(
                 source=cv_image,
                 verbose=False,

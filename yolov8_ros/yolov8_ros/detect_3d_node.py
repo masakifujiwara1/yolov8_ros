@@ -29,7 +29,7 @@ from tf2_ros.buffer import Buffer
 from tf2_ros import TransformException
 from tf2_ros.transform_listener import TransformListener
 
-from sensor_msgs.msg import CameraInfo, Image
+from sensor_msgs.msg import CameraInfo, Image, CompressedImage
 from geometry_msgs.msg import TransformStamped
 from yolov8_msgs.msg import Detection
 from yolov8_msgs.msg import DetectionArray
@@ -88,7 +88,7 @@ class Detect3DNode(Node):
 
         # subs
         self.depth_sub = message_filters.Subscriber(
-            self, Image, "depth_image",
+            self, CompressedImage, "depth_image",
             qos_profile=self.depth_image_qos_profile)
         self.depth_info_sub = message_filters.Subscriber(
             self, CameraInfo, "depth_info",
@@ -102,7 +102,7 @@ class Detect3DNode(Node):
 
     def process_detections(
         self,
-        depth_msg: Image,
+        depth_msg: CompressedImage,
         depth_info_msg: CameraInfo,
         detections_msg: DetectionArray
     ) -> List[Detection]:
@@ -117,7 +117,7 @@ class Detect3DNode(Node):
             return []
 
         new_detections = []
-        depth_image = self.cv_bridge.imgmsg_to_cv2(depth_msg)
+        depth_image = self.cv_bridge.compressed_imgmsg_to_cv2(depth_msg)
 
         for detection in detections_msg.detections:
             bbox3d = self.convert_bb_to_3d(
