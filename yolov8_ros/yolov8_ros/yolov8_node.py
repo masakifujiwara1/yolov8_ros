@@ -13,7 +13,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-
 from typing import List, Dict
 
 import rclpy
@@ -21,9 +20,7 @@ from rclpy.qos import QoSProfile
 from rclpy.qos import QoSHistoryPolicy
 from rclpy.qos import QoSDurabilityPolicy
 from rclpy.qos import QoSReliabilityPolicy
-from rclpy.lifecycle import LifecycleNode
-from rclpy.lifecycle import TransitionCallbackReturn
-from rclpy.lifecycle import LifecycleState
+from rclpy.node import Node
 
 from cv_bridge import CvBridge
 
@@ -46,7 +43,7 @@ from yolov8_msgs.msg import DetectionArray
 from std_srvs.srv import SetBool
 
 
-class Yolov8Node(LifecycleNode):
+class Yolov8Node(Node):
 
     def __init__(self, **kwargs) -> None:
         super().__init__("yolov8_node", **kwargs)
@@ -60,9 +57,6 @@ class Yolov8Node(LifecycleNode):
                                QoSReliabilityPolicy.BEST_EFFORT)
 
         self.get_logger().info('Yolov8Node created')
-
-    def on_configure(self, state: LifecycleState) -> TransitionCallbackReturn:
-        self.get_logger().info(f'Configuring {self.get_name()}')
 
         self.model = self.get_parameter(
             "model").get_parameter_value().string_value
@@ -86,22 +80,12 @@ class Yolov8Node(LifecycleNode):
             depth=1
         )
 
-        self._pub = self.create_lifecycle_publisher(
+        self._pub = self.create_publisher(
             DetectionArray, "detections", 10)
         self._srv = self.create_service(
             SetBool, "enable", self.enable_cb
         )
         self.cv_bridge = CvBridge()
-
-        return TransitionCallbackReturn.SUCCESS
-
-    def enable_cb(self, request, response):
-        self.enable = request.data
-        response.success = True
-        return response
-
-    def on_activate(self, state: LifecycleState) -> TransitionCallbackReturn:
-        self.get_logger().info(f'Activating {self.get_name()}')
 
         self.yolo = YOLO(self.model)
         self.yolo.fuse()
@@ -114,33 +98,10 @@ class Yolov8Node(LifecycleNode):
             self.image_qos_profile
         )
 
-        super().on_activate(state)
-
-        return TransitionCallbackReturn.SUCCESS
-
-    def on_deactivate(self, state: LifecycleState) -> TransitionCallbackReturn:
-        self.get_logger().info(f'Deactivating {self.get_name()}')
-
-        del self.yolo
-        if 'cuda' in self.device:
-            self.get_logger().info("Clearing CUDA cache")
-            cuda.empty_cache()
-
-        self.destroy_subscription(self._sub)
-        self._sub = None
-
-        super().on_deactivate(state)
-
-        return TransitionCallbackReturn.SUCCESS
-
-    def on_cleanup(self, state: LifecycleState) -> TransitionCallbackReturn:
-        self.get_logger().info(f'Cleaning up {self.get_name()}')
-
-        self.destroy_publisher(self._pub)
-
-        del self.image_qos_profile
-
-        return TransitionCallbackReturn.SUCCESS
+    def enable_cb(self, request, response):
+        self.enable = request.data
+        response.success = True
+        return response
 
     def parse_hypothesis(self, results: Results) -> List[Dict]:
 
@@ -288,8 +249,6 @@ class Yolov8Node(LifecycleNode):
 def main():
     rclpy.init()
     node = Yolov8Node()
-    node.trigger_configure()
-    node.trigger_activate()
     rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()

@@ -13,7 +13,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-
 import numpy as np
 
 import rclpy
@@ -22,9 +21,6 @@ from rclpy.qos import QoSProfile
 from rclpy.qos import QoSHistoryPolicy
 from rclpy.qos import QoSDurabilityPolicy
 from rclpy.qos import QoSReliabilityPolicy
-from rclpy.lifecycle import LifecycleNode
-from rclpy.lifecycle import TransitionCallbackReturn
-from rclpy.lifecycle import LifecycleState
 
 import message_filters
 from cv_bridge import CvBridge
@@ -40,7 +36,7 @@ from yolov8_msgs.msg import Detection
 from yolov8_msgs.msg import DetectionArray
 
 
-class TrackingNode(LifecycleNode):
+class TrackingNode(Node):
 
     def __init__(self) -> None:
         super().__init__("tracking_node")
@@ -52,9 +48,6 @@ class TrackingNode(LifecycleNode):
 
         self.cv_bridge = CvBridge()
 
-    def on_configure(self, state: LifecycleState) -> TransitionCallbackReturn:
-        self.get_logger().info(f'Configuring {self.get_name()}')
-
         tracker_name = self.get_parameter(
             "tracker").get_parameter_value().string_value
 
@@ -64,11 +57,6 @@ class TrackingNode(LifecycleNode):
         self.tracker = self.create_tracker(tracker_name)
         self._pub = self.create_publisher(DetectionArray, "tracking", 10)
 
-        return TransitionCallbackReturn.SUCCESS
-
-    def on_activate(self, state: LifecycleState) -> TransitionCallbackReturn:
-        self.get_logger().info(f'Activating {self.get_name()}')
-
         image_qos_profile = QoSProfile(
             reliability=self.image_reliability,
             history=QoSHistoryPolicy.KEEP_LAST,
@@ -77,34 +65,14 @@ class TrackingNode(LifecycleNode):
         )
 
         # subs
-        image_sub = message_filters.Subscriber(
+        self.image_sub = message_filters.Subscriber(
             self, Image, "image_raw", qos_profile=image_qos_profile)
-        detections_sub = message_filters.Subscriber(
+        self.detections_sub = message_filters.Subscriber(
             self, DetectionArray, "detections", qos_profile=10)
 
         self._synchronizer = message_filters.ApproximateTimeSynchronizer(
-            (image_sub, detections_sub), 10, 0.5)
+            [self.image_sub, self.detections_sub], 10, 0.5)
         self._synchronizer.registerCallback(self.detections_cb)
-
-        return TransitionCallbackReturn.SUCCESS
-
-    def on_deactivate(self, state: LifecycleState) -> TransitionCallbackReturn:
-        self.get_logger().info(f'Deactivating {self.get_name()}')
-
-        self.destroy_subscription(self.image_sub.sub)
-        self.destroy_subscription(self.detections_sub.sub)
-
-        del self._synchronizer
-        self._synchronizer = None
-
-        return TransitionCallbackReturn.SUCCESS
-
-    def on_cleanup(self, state: LifecycleState) -> TransitionCallbackReturn:
-        self.get_logger().info(f'Cleaning up {self.get_name()}')
-
-        del self.tracker
-
-        return TransitionCallbackReturn.SUCCESS
 
     def create_tracker(self, tracker_yaml: str) -> BaseTrack:
 
@@ -186,8 +154,6 @@ class TrackingNode(LifecycleNode):
 def main():
     rclpy.init()
     node = TrackingNode()
-    node.trigger_configure()
-    node.trigger_activate()
     rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()
