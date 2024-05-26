@@ -87,6 +87,10 @@ class TrackingNode(Node):
         tracker = TRACKER_MAP[cfg.tracker_type](args=cfg, frame_rate=1)
         return tracker
 
+    def calc_theta(self, w_img_, x_center_):
+        theta_ = -((x_center_ - (w_img_/2)) * 3.1415) / (w_img_/2)
+        return theta_
+
     def detections_cb(self, img_msg: CompressedImage, detections_msg: DetectionArray) -> None:
 
         tracked_detections_msg = DetectionArray()
@@ -118,8 +122,10 @@ class TrackingNode(Node):
 
             det = Boxes(
                 np.array(detection_list),
-                (img_msg.height, img_msg.width)
+                (img_msg.height, img_msg.width) # 720, 1080
             )
+
+            # self.get_logger().info(str(img_msg.height) + str(img_msg.width))
 
             tracks = self.tracker.update(det, cv_image)
 
@@ -137,6 +143,9 @@ class TrackingNode(Node):
                     box = tracked_box.xywh[0]
                     tracked_detection.bbox.center.position.x = float(box[0])
                     tracked_detection.bbox.center.position.y = float(box[1])
+
+                    tracked_detection.bbox.center.theta = self.calc_theta(img_msg.width, float(box[0]))
+
                     tracked_detection.bbox.size.x = float(box[2])
                     tracked_detection.bbox.size.y = float(box[3])
 
