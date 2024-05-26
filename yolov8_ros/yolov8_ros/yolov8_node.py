@@ -225,7 +225,7 @@ class Yolov8Node(Node):
             # create detection msgs
             detections_msg = DetectionArray()
 
-            for i in range(len(hypothesis)):
+            for i in range(len(results)):
 
                 aux_msg = Detection()
 
