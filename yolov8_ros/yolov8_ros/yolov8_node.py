@@ -115,8 +115,10 @@ class Yolov8Node(Node):
                 "score": float(box_data.conf)
             }
 
-            if int(box_data.cls) == 0:
-                hypothesis_list.append(hypothesis)
+            # if int(box_data.cls) == 0:
+            #     hypothesis_list.append(hypothesis)
+
+            hypothesis_list.append(hypothesis)
 
         return hypothesis_list
 
@@ -209,10 +211,10 @@ class Yolov8Node(Node):
             if results.boxes:
                 hypothesis = self.parse_hypothesis(results)
                 boxes = self.parse_boxes(results)
-                if hypothesis is None:
-                    return
-            else:
-                return
+            #     if hypothesis is None:
+            #         return
+            # else:
+            #     return
 
             if results.masks:
                 masks = self.parse_masks(results)
@@ -227,15 +229,17 @@ class Yolov8Node(Node):
 
                 aux_msg = Detection()
 
-                if hypothesis is None:
-                    return
-                if hypothesis[i]:
+                if results.boxes:
+
+                # if hypothesis is None:
+                #     return
+                # if hypothesis[i]:
                     aux_msg.class_id = hypothesis[i]["class_id"]
                     aux_msg.class_name = hypothesis[i]["class_name"]
                     aux_msg.score = hypothesis[i]["score"]
 
                     aux_msg.bbox = boxes[i]
-                    hypothesis = None
+                    # hypothesis = None
 
                 if results.masks:
                     aux_msg.mask = masks[i]
