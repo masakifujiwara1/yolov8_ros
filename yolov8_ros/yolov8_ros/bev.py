@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import rclpy
+import math
 from rclpy.node import Node
 from sensor_msgs.msg import LaserScan
 from yolov8_msgs.msg import DetectionArray
@@ -27,7 +28,6 @@ class LaserListener(Node):
                 self.list.append(i.bbox.center.theta)
 
         # angle = 3.14  # 取得したい角度（ラジアン）
-        print("-" * 100)
         for angle in self.list:
             if angle < self.scan.angle_min or angle > self.scan.angle_max:
                 self.get_logger().warn('指定した角度が範囲外です')
@@ -41,13 +41,20 @@ class LaserListener(Node):
                     distance = self.scan.ranges[index-1]
                 if distance == float('inf') and index+1 <= len(self.scan.ranges):
                     distance = self.scan.ranges[index+1]
-                self.get_logger().info(f'Angle: {angle}, Index: {index}, Distance: {distance}')
+                
+                x, y = self.calc_xy(angle, distance)
+                self.get_logger().info(f'Angle(rad): {angle}, Index: {index}, Distance(m): {distance}, x: {x}, y: {y}')
             else:
                 self.get_logger().warn('計算されたインデックスが範囲外です')
-        print("-" * 100)
+        print("-" * 200)
 
     def callback(self, scan):
         self.scan = scan
+
+    def calc_xy(self, angle, distance):
+        x = distance * math.cos(angle)
+        y = distance * math.sin(angle)
+        return x, y
 
 def main(args=None):
     rclpy.init(args=args)
