@@ -37,6 +37,10 @@ class LaserListener(Node):
 
             if 0 <= index < len(self.scan.ranges):
                 distance = self.scan.ranges[index]
+                if distance == float('inf') and 0 <= index-1:
+                    distance = self.scan.ranges[index-1]
+                if distance == float('inf') and index+1 <= len(self.scan.ranges):
+                    distance = self.scan.ranges[index+1]
                 self.get_logger().info(f'Angle: {angle}, Index: {index}, Distance: {distance}')
             else:
                 self.get_logger().warn('計算されたインデックスが範囲外です')
