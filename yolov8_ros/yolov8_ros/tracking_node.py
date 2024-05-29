@@ -14,6 +14,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import numpy as np
+import math
 
 import rclpy
 from rclpy.node import Node
@@ -89,6 +90,7 @@ class TrackingNode(Node):
 
     def calc_theta(self, w_img_, x_center_):
         theta_ = -((x_center_ - (w_img_/2)) * 3.1415) / (w_img_/2)
+        theta_ = math.atan2(math.sin(theta_), math.cos(theta_))
         return theta_
 
     def detections_cb(self, img_msg: CompressedImage, detections_msg: DetectionArray) -> None:
