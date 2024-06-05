@@ -89,8 +89,21 @@ class TrackingNode(Node):
         return tracker
 
     def calc_theta(self, w_img_, x_center_):
-        theta_ = -((x_center_ - (w_img_/2)) * 3.1415) / (w_img_/2)
+        fov_horizonal = math.pi / 2 # 90deg
+        # theta_ = -((x_center_ - (w_img_/2)) * 3.1415) / (w_img_/2)
+        theta_ = ((x_center_ - (w_img_ / 2)) * fov_horizonal) / w_img_
         theta_ = math.atan2(math.sin(theta_), math.cos(theta_))
+
+        # half_w_img_ = (w_img_ / 2)
+        # l = half_w_img_ / math.tan(fov_horizonal / 2)
+        # if x_center_ > half_w_img_:
+        # theta_ = math.atan((x_center_ - half_w_img_) / l)
+        # else:
+        #     theta_ = -math.atan((x_center_ - half_w_img_) / l)
+        # theta_ = math.atan2(math.sin(theta_), math.cos(theta_))
+
+        # self.get_logger().info(f'x_center_: {x_center_}, theta: {theta_}')
+
         return theta_
 
     def detections_cb(self, img_msg: CompressedImage, detections_msg: DetectionArray) -> None:
@@ -124,7 +137,7 @@ class TrackingNode(Node):
 
             det = Boxes(
                 np.array(detection_list),
-                (img_msg.height, img_msg.width) # 720, 1080
+                (img_msg.height, img_msg.width) # 720, 1280 fov H: 90 V: 59
             )
 
             # self.get_logger().info(str(img_msg.height) + str(img_msg.width))
