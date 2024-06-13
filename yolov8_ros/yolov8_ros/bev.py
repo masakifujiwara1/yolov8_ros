@@ -108,7 +108,7 @@ class LaserListener(Node):
         point.color.g = 1.0
         point.color.b = 0.0
         point.color.a = 1.0
-        point.lifetime = rclpy.duration.Duration(seconds = 0.5).to_msg()
+        point.lifetime = rclpy.duration.Duration(seconds = 0.1).to_msg()
         self.marker_array.markers.append(point)
     
     def publish_marker_array(self):
