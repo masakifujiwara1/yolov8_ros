@@ -226,7 +226,6 @@ class Yolov8Node(Node):
             detections_msg = DetectionArray()
 
             for i in range(len(results)):
-
                 aux_msg = Detection()
 
                 if results.boxes:
@@ -247,7 +246,8 @@ class Yolov8Node(Node):
                 if results.keypoints:
                     aux_msg.keypoints = keypoints[i]
 
-                detections_msg.detections.append(aux_msg)
+                if aux_msg.class_id == 0:
+                    detections_msg.detections.append(aux_msg)
 
             # publish detections
             detections_msg.header = msg.header
