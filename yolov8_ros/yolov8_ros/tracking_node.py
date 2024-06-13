@@ -92,7 +92,7 @@ class TrackingNode(Node):
         fov_horizonal = math.pi / 2 # 90deg
         # theta_ = -((x_center_ - (w_img_/2)) * 3.1415) / (w_img_/2)
         theta_ = ((x_center_ - (w_img_ / 2)) * fov_horizonal) / w_img_
-        theta_ = math.atan2(math.sin(theta_), math.cos(theta_))
+        # theta_ = math.atan2(math.sin(theta_), math.cos(theta_))
 
         # half_w_img_ = (w_img_ / 2)
         # l = half_w_img_ / math.tan(fov_horizonal / 2)
@@ -104,7 +104,7 @@ class TrackingNode(Node):
 
         # self.get_logger().info(f'x_center_: {x_center_}, theta: {theta_}')
 
-        return theta_
+        return -theta_
 
     def detections_cb(self, img_msg: CompressedImage, detections_msg: DetectionArray) -> None:
 
