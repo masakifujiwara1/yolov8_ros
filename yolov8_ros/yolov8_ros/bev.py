@@ -13,8 +13,8 @@ class LaserListener(Node):
         super().__init__('laser_listener')
         self.scan_sub = self.create_subscription(
             LaserScan,
-            # '/velodyne_2dscan',
-            '/velodyne_2dscan_high_beams',
+            '/detected_pedestrians',
+            # '/velodyne_2dscan_high_beams',
             self.callback,
             10)
         self.detections_sub = self.create_subscription(
@@ -55,7 +55,7 @@ class LaserListener(Node):
             if 0 <= index < len(self.scan.ranges):
                 distance = self.scan.ranges[index]
                 if distance == float('inf'):
-                    for offset in range(-3, 4):
+                    for offset in range(-1, 1):
                         new_index = index + offset
                         if self.is_valid_index(new_index, len(self.scan.ranges)):
                                 distance = self.scan.ranges[new_index]
@@ -108,7 +108,7 @@ class LaserListener(Node):
         point.color.g = 1.0
         point.color.b = 0.0
         point.color.a = 1.0
-        point.lifetime = rclpy.duration.Duration(seconds = 0.001).to_msg()
+        point.lifetime = rclpy.duration.Duration(seconds = 0.5).to_msg()
         self.marker_array.markers.append(point)
     
     def publish_marker_array(self):

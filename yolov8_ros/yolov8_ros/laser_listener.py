@@ -12,7 +12,8 @@ class LaserListener(Node):
         super().__init__('laser_listener')
         self.subscription = self.create_subscription(
             LaserScan,
-            '/velodyne_2dscan_high_beams',
+            '/detected_pedestrians',
+            # '/velodyne_2dscan_high_beams',
             self.laser_callback,
             10)
         self.previous_clusters = None
