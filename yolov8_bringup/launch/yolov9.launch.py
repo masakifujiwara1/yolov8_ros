@@ -35,7 +35,7 @@ def generate_launch_description():
                 "device": LaunchConfiguration("device", default="cuda:0"),
                 "enable": LaunchConfiguration("enable", default="True"),
                 "threshold": LaunchConfiguration("threshold", default="0.5"),
-                "input_image_topic": LaunchConfiguration("input_image_topic", default="/left/image_color/compressed"),
+                "input_image_topic": LaunchConfiguration("input_image_topic", default="/ros_indigosdk_node/stitched_image0/compressed"),
                 "image_reliability": LaunchConfiguration("image_reliability", default="2"),
                 "namespace": LaunchConfiguration("namespace", default="yolo"),
             }.items(),
