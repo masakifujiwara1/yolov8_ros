@@ -11,12 +11,15 @@ from visualization_msgs.msg import Marker, MarkerArray
 class LaserListener(Node):
     def __init__(self):
         super().__init__('laser_listener')
+        scan_qos = rclpy.qos.QoSProfile(depth=10)
+        scan_qos.reliability = rclpy.qos.QoSReliabilityPolicy.BEST_EFFORT
         self.scan_sub = self.create_subscription(
             LaserScan,
-            '/detected_pedestrians',
+            # '/detected_pedestrians',
             # '/velodyne_2dscan_high_beams',
+            '/scan',
             self.callback,
-            10)
+            scan_qos)
         self.detections_sub = self.create_subscription(
             DetectionArray,
             '/yolo/tracking',
@@ -47,7 +50,7 @@ class LaserListener(Node):
             size_y = value['size_y']
 
             if angle < self.scan.angle_min or angle > self.scan.angle_max:
-                self.get_logger().warn('指定した角度が範囲外です')
+                self.get_logger().warn(f'指定した角度が範囲外です. angle={angle}, min={self.scan.angle_min}')
                 return
 
             index = int((angle - self.scan.angle_min) / self.scan.angle_increment)
@@ -84,6 +87,7 @@ class LaserListener(Node):
 
     def callback(self, scan):
         self.scan = scan
+        # self.get_logger().info(f'received scan topic')
 
     def calc_xy(self, angle, distance):
         x = distance * math.cos(angle)
@@ -95,7 +99,7 @@ class LaserListener(Node):
 
     def add_marker(self, id_, x, y):
         point = Marker()
-        point.header.frame_id = 'velodyne'
+        point.header.frame_id = 'upper_velodyne_frame'
         point.ns = "point"
         point.id = int(id_)
         point.type = Marker.SPHERE
