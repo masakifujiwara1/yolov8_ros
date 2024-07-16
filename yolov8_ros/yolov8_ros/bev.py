@@ -56,15 +56,20 @@ class LaserListener(Node):
             index = int((angle - self.scan.angle_min) / self.scan.angle_increment)
 
             if 0 <= index < len(self.scan.ranges):
-                distance = self.scan.ranges[index]
-                if distance == float('inf'):
-                    for offset in range(-1, 1):
-                        new_index = index + offset
-                        if self.is_valid_index(new_index, len(self.scan.ranges)):
-                                distance = self.scan.ranges[new_index]
-                        if distance != float('inf'):
-                            break
+                # distance = self.scan.ranges[index]
+                # if distance == float('inf'):
+                #     for offset in range(-1, 1):
+                #         new_index = index + offset
+                #         if self.is_valid_index(new_index, len(self.scan.ranges)):
+                #                 distance = self.scan.ranges[new_index]
+                #         if distance != float('inf'):
+                #             break
+                min_dist = float('inf')
+                for offset in range(-7, 7):
+                    distance = self.scan.ranges[index+offset]
+                    min_dist = min(distance, min_dist)
                 
+                distance = min_dist
                 x, y = self.calc_xy(angle, distance)
                 # if score >= 0.75:
                 # self.get_logger().info(f'Angle(rad): {angle}, Index: {index}, Distance(m): {distance}, x: {x}, y: {y}, tracking_id: {id_}')
@@ -99,7 +104,7 @@ class LaserListener(Node):
 
     def add_marker(self, id_, x, y):
         point = Marker()
-        point.header.frame_id = 'upper_velodyne_frame'
+        point.header.frame_id = 'base_scan'
         point.ns = "point"
         point.id = int(id_)
         point.type = Marker.SPHERE
