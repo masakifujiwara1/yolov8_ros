@@ -7,6 +7,7 @@ from sensor_msgs.msg import LaserScan
 from yolov8_msgs.msg import DetectionArray
 from geometry_msgs.msg import PoseArray
 from visualization_msgs.msg import Marker, MarkerArray
+import numpy as np
 
 class LaserListener(Node):
     def __init__(self):
@@ -32,6 +33,8 @@ class LaserListener(Node):
 
         # process frame
         self.frame = 0
+        self.data_array = None
+        self.is_fst_flag = True
         self.curr_frames = deque(maxlen=8)
         self.timer = self.create_timer(0.4, self.process_frames)
 
@@ -46,6 +49,7 @@ class LaserListener(Node):
                 self.dicts[idx]['size_x'] = i.bbox.size.x
                 self.dicts[idx]['size_y'] = i.bbox.size.y
 
+    def calc_pose(self):
         for key, value in self.dicts.items():
             # print(key, value) key: 0 value: {'id': 1537 ...etc...}
             angle = value['theta']
@@ -131,10 +135,22 @@ class LaserListener(Node):
     def process_frames(self):
         # self.get_logger().info(f'frame: {self.frame}')
         self.curr_frames.append(self.frame)
-        data = np.array(self.frame, self.)
+        self.calc_pose()
+        for key, value in self.dicts.items():
+            data = np.array([self.frame, self.dicts[key]['id'], self.dicts[key]['x'], self.dicts[key]['y']])
+
+            if self.is_fst_flag:
+                self.data_array = data
+                self.is_fst_flag = False
+            else:
+                self.data_array = np.vstack((self.data_array, data))
 
         if len(self.curr_frames) == 8:
-            print(self.curr_frames)
+            # print(self.curr_frames)
+            self.data_array = self.data_array[self.data_array[:, 0].astype(int) >= self.curr_frames[0]]
+            # self.get_logger().info(f'data: {self.data_array}')
+            # self.get_logger().info(f'*'*30)
+
         self.frame += 24 # function end
 
 def main(args=None):
