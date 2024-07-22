@@ -5,6 +5,8 @@ from collections import defaultdict, deque
 from rclpy.node import Node
 from sensor_msgs.msg import LaserScan
 from yolov8_msgs.msg import DetectionArray
+from ptp_msgs.msg import PedestrianArray
+
 from geometry_msgs.msg import PoseArray
 from visualization_msgs.msg import Marker, MarkerArray
 import numpy as np
@@ -27,6 +29,7 @@ class LaserListener(Node):
             self.callback_yolo,
             10)
         self.marker_array_pub = self.create_publisher(MarkerArray, 'detect_human', 10)
+        self.pedestrian_array_pub = self.create_publisher(PedestrianArray, 'ped_seq', 10)
         self.dicts = defaultdict(lambda: {'id': 0, 'score': 0, 'theta': 0, 'x': 0, 'y': 0, 'size_x': 0, 'size_y': 0})
         self.scan = LaserScan()
         self.marker_array = MarkerArray()
@@ -137,7 +140,7 @@ class LaserListener(Node):
         self.curr_frames.append(self.frame)
         self.calc_pose()
         for key, value in self.dicts.items():
-            data = np.array([self.frame, self.dicts[key]['id'], self.dicts[key]['x'], self.dicts[key]['y']])
+            data = np.array([self.frame, self.dicts[key]['id'], self.dicts[key]['x'], self.dicts[key]['y']], dtype=np.float32)
 
             if self.is_fst_flag:
                 self.data_array = data
@@ -150,6 +153,13 @@ class LaserListener(Node):
             self.data_array = self.data_array[self.data_array[:, 0].astype(int) >= self.curr_frames[0]]
             # self.get_logger().info(f'data: {self.data_array}')
             # self.get_logger().info(f'*'*30)
+
+            msg = PedestrianArray()
+            msg.data = self.data_array.flatten().tolist()
+            msg.shape = self.data_array.shape
+            msg.dtype = str(self.data_array.dtype)
+
+            self.pedestrian_array_pub.publish(msg)
 
         self.frame += 24 # function end
 
