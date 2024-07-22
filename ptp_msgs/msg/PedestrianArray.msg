@@ -1,4 +1,6 @@
 # represents all Pedestrian detections in one frame
 
 std_msgs/Header header
-ptp_msgs/Pedestrian[] pedestrians
+float32[] data
+uint32[] shape
+string dtype
